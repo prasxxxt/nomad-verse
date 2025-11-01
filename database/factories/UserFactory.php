@@ -40,5 +40,22 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+
+    }
+
+    public function configure()
+    {
+        return $this->afterCreating(function (\App\Models\User $user) {
+            $user->profile()->create([
+                'role' => $this->faker->randomElement(['admin', 'traveller', 'viewer']),
+                'bio' => $this->faker->paragraph(),
+                'profile_photo' => $this->faker->imageUrl(200, 200, 'people'),
+                'social_links' => json_encode([
+                    'twitter' => $this->faker->url,
+                    'instagram' => $this->faker->url,
+                ]),
+                'country_id' => \App\Models\Country::inRandomOrder()->first()->id,
+            ]);
+        });
     }
 }
