@@ -15,8 +15,8 @@ class CountryTableSeeder extends Seeder
     public function run(): void
     {
         $c = new Country;
-        $c->name = "India";
-        $c->iso_code = "IND";
+        $c->name = "Hardcoded Country";
+        $c->iso_code = "HCC";
         $c->flag = null;
         $c->save();
         

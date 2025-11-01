@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call(CountryTableSeeder::class);
-
-        User::factory(10)->create();
+        $this->call(UserTableSeeder::class);
+        
     }
 }
