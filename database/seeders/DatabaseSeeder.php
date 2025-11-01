@@ -23,6 +23,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(CountryTableSeeder::class);
         $this->call(UserTableSeeder::class);
-        
+        $this->call(PostTableSeeder::class);
     }
 }
