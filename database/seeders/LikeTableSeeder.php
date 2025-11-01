@@ -31,7 +31,7 @@ class LikeTableSeeder extends Seeder
         $like->save();
 
         Like::factory()
-            ->count(100)
+            ->count(50)
             ->make()
             ->each(function ($like) {
                 Like::firstOrCreate([
