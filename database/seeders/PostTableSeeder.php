@@ -18,10 +18,10 @@ class PostTableSeeder extends Seeder
     {
 
         $post = new Post;
-        $post->user_id = Profile::where('role', 'traveller')->first()->user->id;
+        $post->user_id = Profile::whereIn('role', ['traveller', 'admin'])->first()->user->id;
         $post->country_id = Country::inRandomOrder()->first()->id;
         $post->title = 'Hardcoded Travel Post';
-        $post->description = 'A hardcoded example: only traveller users can post!';
+        $post->description = 'A hardcoded example: only admin and traveller users can post!';
         $post->image = "https://image.com/600x400.png";
         $post->save();
 

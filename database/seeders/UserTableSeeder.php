@@ -26,16 +26,15 @@ class UserTableSeeder extends Seeder
         $user->remember_token = Str::random(10);
         $user->save();
 
-        $country = Country::inRandomOrder()->first();
 
         // Create profile for hardcoded user
         $profile = new Profile;
         $profile->user_id = $user->id;
-        $profile->role = 'admin';
+        $profile->role = 'traveller';
         $profile->bio = 'This is a hardcoded admin user profile.';
         $profile->profile_photo = null;
         $profile->social_links = json_encode(['twitter' => 'https://twitter.com/hardcodeduser']);
-        $profile->country_id = $country->id;
+        $profile->country_id = Country::inRandomOrder()->first()->id;
         $profile->save();
 
         // Create random users and profiles using factories

@@ -21,7 +21,7 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
-        $travellerUserIds = Profile::where('role', 'traveller')->pluck('user_id')->toArray();
+        $travellerUserIds = Profile::whereIn('role', ['traveller', 'admin'])->pluck('user_id')->toArray();
 
         return [
             'user_id' => $this->faker->randomElement($travellerUserIds),
