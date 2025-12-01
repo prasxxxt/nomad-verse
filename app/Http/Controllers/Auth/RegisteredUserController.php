@@ -41,6 +41,12 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $user->profile()->create([
+        'role' => 'viewer', // Default role
+        'bio' => 'My cool bio',
+        'country_id' => null,
+        ]);
+
         event(new Registered($user));
 
         Auth::login($user);
