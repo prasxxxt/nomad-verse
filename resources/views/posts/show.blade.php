@@ -48,7 +48,7 @@
                     </button>
                 </div>
 
-                @if(auth()->id() === $post->user_id)
+                @can('update', $post)
                     <div class="flex gap-4 border-t pt-4 mt-6">
                         <a href="{{ route('posts.edit', $post->id) }}" class="text-yellow-600 hover:text-yellow-800 font-bold">Edit Post</a>
                         
@@ -58,7 +58,7 @@
                             <button type="submit" class="text-red-600 hover:text-red-800 font-bold">Delete Post</button>
                         </form>
                     </div>
-                @endif
+                @endcan
             </div>
         </div>
 
@@ -107,7 +107,6 @@
 </div>
 
 <script>
-    // 1. Polymorphic Like Function
     function toggleLike(type, id) {
         fetch(`/likes/${type}/${id}`, {
             method: "POST",
@@ -119,21 +118,19 @@
         .then(response => response.json())
         .then(data => {
             if(data.success) {
-                // Update the specific counter for THIS item (post or comment)
                 document.getElementById(`like-count-${type}-${id}`).innerText = data.count;
                 
-                // Update the specific button text
+
                 let btn = document.getElementById(`like-btn-${type}-${id}`);
                 let text = data.liked ? 'Unlike' : 'Like';
                 
-                // Use innerHTML to preserve the span inside
+
                 btn.innerHTML = `${text} (<span id="like-count-${type}-${id}">${data.count}</span>)`;
             }
         })
         .catch(error => console.error('Error:', error));
     }
 
-    // 2. AJAX Comment Submission
     document.getElementById('comment-form').addEventListener('submit', function(e) {
         e.preventDefault();
 

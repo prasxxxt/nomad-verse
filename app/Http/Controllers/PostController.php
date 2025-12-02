@@ -25,6 +25,7 @@ class PostController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', Post::class); // Security Check
         return view('posts.create');
     }
 
@@ -33,6 +34,7 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Post::class); // Security Check
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -69,7 +71,7 @@ class PostController extends Controller
     public function edit(string $id)
     {
         $post = Post::findOrFail($id);
-
+        $this->authorize('update', $post); // Security Check
         if ($post->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
@@ -83,7 +85,7 @@ class PostController extends Controller
     public function update(Request $request, string $id)
     {
         $post = Post::findOrFail($id);
-
+        $this->authorize('update', $post); // Security Check
         if ($post->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
@@ -116,7 +118,7 @@ class PostController extends Controller
     public function destroy(string $id)
     {
         $post = Post::findOrFail($id);
-
+        $this->authorize('delete', $post); // Security Check
         if ($post->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
