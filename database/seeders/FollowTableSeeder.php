@@ -20,26 +20,26 @@ class FollowTableSeeder extends Seeder
         $user3 = User::find(3);
 
         // Manually insert follow relationships
-        DB::table('follows')->insert([
-            [
-                'user_id' => $user1->id,
-                'followed_user_id' => $user2->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $user1->id,
-                'followed_user_id' => $user3->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $user2->id,
-                'followed_user_id' => $user3->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        ]);
+        // DB::table('follows')->insert([
+        //     [
+        //         'user_id' => $user1->id,
+        //         'followed_user_id' => $user2->id,
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ],
+        //     [
+        //         'user_id' => $user1->id,
+        //         'followed_user_id' => $user3->id,
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ],
+        //     [
+        //         'user_id' => $user2->id,
+        //         'followed_user_id' => $user3->id,
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ]
+        // ]);
 
         $count = 100;
         

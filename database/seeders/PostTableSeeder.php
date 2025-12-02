@@ -22,10 +22,10 @@ class PostTableSeeder extends Seeder
         $post->country_id = Country::inRandomOrder()->first()->id;
         $post->title = 'Hardcoded Travel Post';
         $post->description = 'A hardcoded example: only admin and traveller users can post!';
-        $post->image = "https://image.com/600x400.png";
+        $post->image = "https://placehold.net/800x600.png";
         $post->save();
 
         
-        Post::factory(5)->create();    
+        Post::factory(30)->create();    
     }
 }

@@ -19,10 +19,10 @@ class UserTableSeeder extends Seeder
     public function run(): void
     {
         $user = new User;
-        $user->name = 'Hardcoded User';
-        $user->email = 'hardcodeduser@example.com';
+        $user->name = 'Prashant Kr';
+        $user->email = 'prashant181000@gmail.com';
         $user->email_verified_at = now();
-        $user->password = bcrypt('password');
+        $user->password = bcrypt('12345678');
         $user->remember_token = Str::random(10);
         $user->save();
 

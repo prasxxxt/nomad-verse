@@ -28,7 +28,7 @@ class PostFactory extends Factory
             'country_id' => Country::inRandomOrder()->first()->id,
             'title' => $this->faker->sentence(),
             'description' => $this->faker->paragraph(),
-            'image' => $this->faker->imageUrl(640, 480, 'travel'),
+            'image' => "https://placehold.net/800x600.png",
         ];
     }
 }
