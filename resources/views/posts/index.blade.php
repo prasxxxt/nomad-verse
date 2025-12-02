@@ -32,6 +32,10 @@
                                         </a>
                                     </p>
                                     
+                                    <span class="text-xs text-gray-500 block">
+                                        {{ '@' . ($post->user->profile->username ?? 'user') }}
+                                    </span>
+                                    
                                     @if(auth()->id() !== $post->user_id)
                                         <form action="{{ route('users.follow', $post->user) }}" method="POST" class="inline">
                                             @csrf

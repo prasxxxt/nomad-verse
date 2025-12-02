@@ -23,7 +23,8 @@ class ProfileFactory extends Factory
             // Will be set externally when called from UserFactory
             'role' => $this->faker->randomElement(['admin', 'traveller', 'viewer']),
             'bio' => $this->faker->paragraph(),
-            'profile_photo' => $this->faker->imageUrl(200, 200, 'people'),
+            'username' => $this->faker->unique()->userName(),
+            'profile_photo' => 'https://placehold.net/600x600.png',
             'social_links' => json_encode([
                 'twitter' => $this->faker->url,
                 'instagram' => $this->faker->url,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -41,7 +42,17 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $baseSlug = Str::slug($request->name);
+        $username = $baseSlug;
+        $counter = 1;
+
+        while (\App\Models\Profile::where('username', $username)->exists()) {
+            $username = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
         $user->profile()->create([
+        'username' => $username,
         'role' => 'viewer', // Default role
         'bio' => 'My cool bio',
         'country_id' => null,

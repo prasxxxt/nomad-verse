@@ -21,6 +21,9 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between">
                         <div>
                             <h1 class="text-3xl font-bold text-gray-900">{{ $user->name }}</h1>
+                            <p class="text-indigo-600 font-semibold mb-1">
+                                {{ '@' . ($user->profile->username ?? 'user') }}
+                            </p>
                             <p class="text-sm text-gray-500 font-medium">Joined {{ $user->created_at->format('M Y') }}</p>
                             @if($user->profile)
                                 <span class="inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">

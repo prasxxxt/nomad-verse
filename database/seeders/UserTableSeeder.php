@@ -31,8 +31,9 @@ class UserTableSeeder extends Seeder
         $profile = new Profile;
         $profile->user_id = $user->id;
         $profile->role = 'admin';
+        $profile->username = 'prahsantkr';
         $profile->bio = 'This is a hardcoded admin user profile.';
-        $profile->profile_photo = null;
+        $profile->profile_photo = 'https://placehold.net/600x600.png';
         $profile->social_links = json_encode(['twitter' => 'https://twitter.com/hardcodeduser']);
         $profile->country_id = Country::inRandomOrder()->first()->id;
         $profile->save();
