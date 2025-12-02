@@ -30,7 +30,7 @@ class UserTableSeeder extends Seeder
         // Create profile for hardcoded user
         $profile = new Profile;
         $profile->user_id = $user->id;
-        $profile->role = 'traveller';
+        $profile->role = 'admin';
         $profile->bio = 'This is a hardcoded admin user profile.';
         $profile->profile_photo = null;
         $profile->social_links = json_encode(['twitter' => 'https://twitter.com/hardcodeduser']);

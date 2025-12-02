@@ -72,9 +72,6 @@ class PostController extends Controller
     {
         $post = Post::findOrFail($id);
         $this->authorize('update', $post); // Security Check
-        if ($post->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized action.');
-        }
 
         return view('posts.edit', compact('post'));
     }
@@ -86,9 +83,7 @@ class PostController extends Controller
     {
         $post = Post::findOrFail($id);
         $this->authorize('update', $post); // Security Check
-        if ($post->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized action.');
-        }
+        
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -119,9 +114,7 @@ class PostController extends Controller
     {
         $post = Post::findOrFail($id);
         $this->authorize('delete', $post); // Security Check
-        if ($post->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized action.');
-        }
+        
 
         if ($post->image) {
             Storage::disk('public')->delete(str_replace('storage/', '', $post->image));
