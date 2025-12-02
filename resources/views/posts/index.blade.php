@@ -18,18 +18,36 @@
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6 bg-white border-b border-gray-200">
                             
-                            <div class="flex justify-between items-center mb-4">
-                                <div class="flex items-center">
-                                    <div class="font-bold text-lg">{{ $post->user->name }}</div>
-                                    <span class="mx-2 text-gray-400">&bull;</span>
-                                    <span class="text-gray-500 text-sm">{{ $post->created_at->diffForHumans() }}</span>
-                                </div>
-                                @if($post->country)
-                                    <span class="bg-gray-100 text-gray-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded border border-gray-500">
-                                        {{ $post->country->flag }} {{ $post->country->name }}
-                                    </span>
-                                @endif
+                            <div class="p-4 flex justify-between items-center border-b border-gray-100 bg-white">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                                {{ substr($post->user->name, 0, 1) }}
                             </div>
+                            
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <p class="font-bold text-gray-900 text-sm">{{ $post->user->name }}</p>
+                                    
+                                    @if(auth()->id() !== $post->user_id)
+                                        <form action="{{ route('users.follow', $post->user) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" class="text-xs font-semibold text-blue-500 hover:text-blue-700 ml-1">
+                                                {{ auth()->user()->follows->contains($post->user_id) ? '• Unfollow' : '• Follow' }}
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-gray-500">{{ $post->created_at->diffForHumans() }}</p>
+                            </div>
+                        </div>
+
+                        @if($post->country)
+                            <div class="flex items-center space-x-1 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
+                                <span class="text-xl">{{ $post->country->flag }}</span>
+                                <span class="text-xs font-semibold text-gray-600 uppercase">{{ $post->country->iso_code }}</span>
+                            </div>
+                        @endif
+                    </div>
 
                             <h3 class="text-xl font-bold mb-2">
                                 <a href="{{ route('posts.show', $post->id) }}" class="hover:text-blue-600 hover:underline">

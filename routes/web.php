@@ -18,6 +18,9 @@ Route::post('/posts/{post}/comments', [App\Http\Controllers\CommentController::c
 Route::post('/likes/{type}/{id}', [App\Http\Controllers\LikeController::class, 'toggle'])
     ->name('likes.toggle');
 
+Route::post('/users/{user}/follow', [App\Http\Controllers\FollowController::class, 'toggle'])
+    ->name('users.follow');
+
 Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])
     ->name('notifications.index');
 
