@@ -38,6 +38,16 @@
                     {{ $post->description }}
                 </div>
 
+                <div class="mt-4">
+                    <button 
+                        onclick="toggleLike('post', {{ $post->id }})" 
+                        id="like-btn-post-{{ $post->id }}" 
+                        class="text-blue-500 font-bold border p-2 rounded hover:bg-blue-50">
+                        {{ $post->likes->contains('user_id', auth()->id()) ? 'Unlike' : 'Like' }}
+                        (<span id="like-count-post-{{ $post->id }}">{{ $post->likes->count() }}</span>)
+                    </button>
+                </div>
+
                 @if(auth()->id() === $post->user_id)
                     <div class="flex gap-4 border-t pt-4 mt-6">
                         <a href="{{ route('posts.edit', $post->id) }}" class="text-yellow-600 hover:text-yellow-800 font-bold">Edit Post</a>
@@ -58,31 +68,72 @@
             <div id="comments-list" class="space-y-4 mb-6">
                 @forelse($post->comments as $comment)
                     <div class="border-b border-gray-100 pb-2">
-                        <p class="text-sm font-bold text-gray-900">{{ $comment->user->name }} 
-                           <span class="text-xs text-gray-500 font-normal"> - {{ $comment->created_at->diffForHumans() }}</span>
-                        </p>
-                        <p class="text-gray-700 mt-1">{{ $comment->content }}</p>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-bold text-gray-900">{{ $comment->user->name }} 
+                                   <span class="text-xs text-gray-500 font-normal"> - {{ $comment->created_at->diffForHumans() }}</span>
+                                </p>
+                                <p class="text-gray-700 mt-1">{{ $comment->content }}</p>
+                            </div>
+                            
+                            <button 
+                                onclick="toggleLike('comment', {{ $comment->id }})" 
+                                id="like-btn-comment-{{ $comment->id }}"
+                                class="text-xs text-blue-500 font-semibold hover:underline">
+                                {{ $comment->likes->contains('user_id', auth()->id()) ? 'Unlike' : 'Like' }}
+                                (<span id="like-count-comment-{{ $comment->id }}">{{ $comment->likes->count() }}</span>)
+                            </button>
+                        </div>
                     </div>
                 @empty
                     <p id="no-comments-msg" class="text-gray-500 italic">No comments yet. Be the first!</p>
                 @endforelse
             </div>
 
-            <form id="comment-form" class="mt-4">
-                @csrf
-                <textarea id="comment-content" class="w-full border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" rows="3" placeholder="Add a comment..."></textarea>
-                <p id="comment-error" class="text-red-500 text-xs mt-1 hidden"></p>
-                
-                <button type="submit" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
-                    Post Comment
-                </button>
-            </form>
+            @auth
+                <form id="comment-form" class="mt-4">
+                    @csrf
+                    <textarea id="comment-content" class="w-full border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" rows="3" placeholder="Add a comment..."></textarea>
+                    <p id="comment-error" class="text-red-500 text-xs mt-1 hidden"></p>
+                    
+                    <button type="submit" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
+                        Post Comment
+                    </button>
+                </form>
+            @endauth
         </div>
 
     </div>
 </div>
 
 <script>
+    // 1. Polymorphic Like Function
+    function toggleLike(type, id) {
+        fetch(`/likes/${type}/${id}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                // Update the specific counter for THIS item (post or comment)
+                document.getElementById(`like-count-${type}-${id}`).innerText = data.count;
+                
+                // Update the specific button text
+                let btn = document.getElementById(`like-btn-${type}-${id}`);
+                let text = data.liked ? 'Unlike' : 'Like';
+                
+                // Use innerHTML to preserve the span inside
+                btn.innerHTML = `${text} (<span id="like-count-${type}-${id}">${data.count}</span>)`;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // 2. AJAX Comment Submission
     document.getElementById('comment-form').addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -114,12 +165,23 @@
                 
                 if(noCommentsMsg) noCommentsMsg.remove();
 
+                // Append new comment WITH Like Button
                 let newCommentHtml = `
                     <div class="border-b border-gray-100 pb-2 bg-blue-50 p-2 rounded animate-pulse">
-                        <p class="text-sm font-bold text-gray-900">${data.user_name} 
-                           <span class="text-xs text-gray-500 font-normal"> - ${data.created_at}</span>
-                        </p>
-                        <p class="text-gray-700 mt-1">${data.comment.content}</p>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-bold text-gray-900">${data.user_name} 
+                                   <span class="text-xs text-gray-500 font-normal"> - ${data.created_at}</span>
+                                </p>
+                                <p class="text-gray-700 mt-1">${data.comment.content}</p>
+                            </div>
+                            <button 
+                                onclick="toggleLike('comment', ${data.comment.id})" 
+                                id="like-btn-comment-${data.comment.id}"
+                                class="text-xs text-blue-500 font-semibold hover:underline">
+                                Like (<span id="like-count-comment-${data.comment.id}">0</span>)
+                            </button>
+                        </div>
                     </div>
                 `;
                 list.insertAdjacentHTML('beforeend', newCommentHtml);
