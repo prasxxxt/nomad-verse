@@ -12,6 +12,9 @@ Route::get('/dashboard', [\App\Http\Controllers\PostController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::get('/users/{user}', [App\Http\Controllers\UserController::class, 'show'])
+    ->name('users.show');
+
 Route::post('/posts/{post}/comments', [App\Http\Controllers\CommentController::class, 'store'])
     ->name('comments.store');
 

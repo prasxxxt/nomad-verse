@@ -26,7 +26,11 @@
                             
                             <div>
                                 <div class="flex items-center space-x-2">
-                                    <p class="font-bold text-gray-900 text-sm">{{ $post->user->name }}</p>
+                                    <p class="font-bold text-gray-900 text-sm">
+                                        <a href="{{ route('users.show', $post->user) }}" class="font-bold text-gray-900 text-sm hover:underline">
+                                            {{ $post->user->name }}
+                                        </a>
+                                    </p>
                                     
                                     @if(auth()->id() !== $post->user_id)
                                         <form action="{{ route('users.follow', $post->user) }}" method="POST" class="inline">
