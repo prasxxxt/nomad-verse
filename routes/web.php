@@ -18,6 +18,9 @@ Route::post('/posts/{post}/comments', [App\Http\Controllers\CommentController::c
 Route::post('/likes/{type}/{id}', [App\Http\Controllers\LikeController::class, 'toggle'])
     ->name('likes.toggle');
 
+Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])
+    ->name('notifications.index');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
