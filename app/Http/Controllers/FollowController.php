@@ -13,6 +13,9 @@ class FollowController extends Controller
         $currentUser = auth()->user();
 
         if ($currentUser->id === $user->id) {
+            if (request()->wantsJson()) {
+                return response()->json(['error' => 'Cannot follow self'], 422);
+            }
             return back()->with('error', 'You cannot follow yourself.');
         }
 
@@ -23,7 +26,13 @@ class FollowController extends Controller
         if ($isFollowing) {
             $user->notify(new NewFollowerNotification($currentUser));
         }
-
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'following' => $isFollowing,
+                'count' => $user->followers()->count()
+            ]);
+        }
         return back()->with('message', $isFollowing ? 'You are now following ' . $user->name : 'Unfollowed ' . $user->name);
     }
 }

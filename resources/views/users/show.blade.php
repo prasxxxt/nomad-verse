@@ -21,45 +21,22 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between">
                         <div>
                             <h1 class="text-3xl font-bold text-gray-900">{{ $user->name }}</h1>
-                            <p class="text-indigo-600 font-semibold mb-1">
-                                {{ '@' . ($user->profile->username ?? 'user') }}
-                            </p>
-                            <p class="text-sm text-gray-500 font-medium">Joined {{ $user->created_at->format('M Y') }}</p>
+                            <p class="text-indigo-600 font-semibold mb-1">{{ '@' . ($user->profile->username ?? 'user') }}</p>
+                            
                             @if($user->profile)
-                                <span class="inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">
+                                <span class="inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">
                                     {{ $user->profile->role }}
                                 </span>
                             @endif
                         </div>
-                        @if($user->profile->country)
-                            <div class="mt-2 text-gray-600 flex items-center text-sm">
-                                <span class="mr-1">{{ $user->profile->country->flag }}</span>
-                                <span>Based in {{ $user->profile->country->name }}</span>
-                            </div>
-                        @endif
-
-                        @php
-                            $socials = json_decode($user->profile->social_links, true);
-                        @endphp
-                        @if(!empty($socials['twitter']) || !empty($socials['instagram']))
-                            <div class="mt-3 flex space-x-3">
-                                @if(!empty($socials['twitter']))
-                                    <a href="{{ $socials['twitter'] }}" target="_blank" class="text-blue-400 hover:text-blue-600 font-bold text-sm">Twitter</a>
-                                @endif
-                                @if(!empty($socials['instagram']))
-                                    <a href="{{ $socials['instagram'] }}" target="_blank" class="text-pink-600 hover:text-pink-800 font-bold text-sm">Instagram</a>
-                                @endif
-                            </div>
-                        @endif
 
                         @if(auth()->id() !== $user->id)
                             <div class="mt-4 md:mt-0">
-                                <form action="{{ route('users.follow', $user) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="px-6 py-2 rounded-full font-bold shadow-sm transition {{ auth()->user()->follows->contains($user->id) ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700' }}">
-                                        {{ auth()->user()->follows->contains($user->id) ? 'Unfollow' : 'Follow' }}
-                                    </button>
-                                </form>
+                                <button 
+                                    onclick="toggleFollow({{ $user->id }}, this)"
+                                    class="px-6 py-2 rounded-full font-bold shadow-sm transition {{ auth()->user()->follows->contains($user->id) ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700' }}">
+                                    {{ auth()->user()->follows->contains($user->id) ? 'Unfollow' : 'Follow' }}
+                                </button>
                             </div>
                         @endif
                     </div>
@@ -69,6 +46,25 @@
                             {{ $user->profile->bio ?? 'This traveler has not written a bio yet.' }}
                         </p>
                     </div>
+                    
+                    @if($user->profile->country)
+                        <div class="mt-2 text-gray-600 flex items-center text-sm">
+                            <span class="mr-1">{{ $user->profile->country->flag }}</span>
+                            <span>Based in {{ $user->profile->country->name }}</span>
+                        </div>
+                    @endif
+
+                    @php $socials = json_decode($user->profile->social_links, true); @endphp
+                    @if(!empty($socials['twitter']) || !empty($socials['instagram']))
+                        <div class="mt-3 flex space-x-3 justify-center md:justify-start">
+                            @if(!empty($socials['twitter']))
+                                <a href="{{ $socials['twitter'] }}" target="_blank" class="text-blue-400 hover:text-blue-600 font-bold text-sm">Twitter</a>
+                            @endif
+                            @if(!empty($socials['instagram']))
+                                <a href="{{ $socials['instagram'] }}" target="_blank" class="text-pink-600 hover:text-pink-800 font-bold text-sm">Instagram</a>
+                            @endif
+                        </div>
+                    @endif
 
                     <div class="mt-6 flex justify-center md:justify-start gap-8 text-sm">
                         <div class="text-center">
@@ -76,7 +72,7 @@
                             <span class="text-gray-500">Posts</span>
                         </div>
                         <div class="text-center">
-                            <span class="block font-bold text-xl text-gray-900">{{ $user->followers->count() }}</span>
+                            <span id="profile-follower-count" class="block font-bold text-xl text-gray-900">{{ $user->followers->count() }}</span>
                             <span class="text-gray-500">Followers</span>
                         </div>
                         <div class="text-center">
@@ -116,7 +112,6 @@
         <div class="mt-6">
             {{ $posts->links() }}
         </div>
-
     </div>
 </div>
 @endsection
