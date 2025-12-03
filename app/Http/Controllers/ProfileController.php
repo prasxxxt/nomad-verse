@@ -71,13 +71,16 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Update the user's public profile information.
-     */
     public function updatePublic(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        $profile = $user->profile;
 
         $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:profiles,username,' . $profile->id],
             'bio' => ['nullable', 'string', 'max:1000'],
             'country_id' => ['nullable', 'exists:countries,id'],
             'twitter' => ['nullable', 'url', 'max:255'],
@@ -86,26 +89,29 @@ class ProfileController extends Controller
             'remove_photo' => ['nullable', 'boolean'],
         ]);
 
-        $user = $request->user();
-        $profile = $user->profile;
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+        $user->save();
 
         if ($request->boolean('remove_photo')) {
             if ($profile->profile_photo) {
-                $relativePath = str_replace('/storage/', '', $profile->profile_photo);
-                $relativePath = str_replace('storage/', '', $relativePath);
+                $relativePath = str_replace('storage/', '', $profile->profile_photo);
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
-                
                 $profile->profile_photo = null;
             }
         }
 
         if ($request->hasFile('profile_photo')) {
             if ($profile->profile_photo) {
-                $relativePath = str_replace('/storage/', '', $profile->profile_photo);
-                $relativePath = str_replace('storage/', '', $relativePath);
+                $relativePath = str_replace('storage/', '', $profile->profile_photo);
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
             }
-            
             $path = $request->file('profile_photo')->store('profiles', 'public');
             $profile->profile_photo = 'storage/' . $path;
         }
@@ -114,12 +120,12 @@ class ProfileController extends Controller
         $socials['twitter'] = $validated['twitter'];
         $socials['instagram'] = $validated['instagram'];
 
-        
+        $profile->username = $validated['username'];
         $profile->bio = $validated['bio'];
         $profile->country_id = $validated['country_id'];
         $profile->social_links = json_encode($socials);
         $profile->save();
 
-        return redirect()->route('users.show', $profile->username)->with('status', 'Passport updated!');
+        return redirect()->route('users.show', $profile->username)->with('status', 'Profile updated successfully!');
     }
 }

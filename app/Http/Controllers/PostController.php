@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Post; // Import the Model
+use App\Models\Post;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // Needed for deleting images
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -14,7 +14,6 @@ class PostController extends Controller
     public function index()
     {
         $posts = Post::with(['user', 'country', 'likes', 'comments', 'media'])->latest()->paginate(10);
-
         return view('posts.index', compact('posts'));
     }
 
@@ -23,11 +22,14 @@ class PostController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', Post::class); // Security Check
-        return view('posts.create');
+        $this->authorize('create', Post::class);
+        
+        $countries = \App\Models\Country::orderBy('name')->get();
+        
+        return view('posts.create', compact('countries'));
     }
 
-/**
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -37,21 +39,22 @@ class PostController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'country_id' => 'required|exists:countries,id', // Added Validation
             'media' => 'nullable|array',
-            'media.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,qt|max:10240', // Max 10MB per file
+            'media.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,qt|max:10240',
         ]);
 
+        // Create Post
         $post = $request->user()->posts()->create([
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'country_id' => \App\Models\Country::inRandomOrder()->first()->id, // Temporary fallback
+            'country_id' => $validated['country_id'], // Now valid
         ]);
 
+        // Handle Media
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {
-                
                 $path = $file->store('posts', 'public');
-                
                 $mime = $file->getMimeType();
                 $type = str_contains($mime, 'video') ? 'video' : 'image';
 
@@ -63,6 +66,26 @@ class PostController extends Controller
         }
 
         return redirect()->route('posts.index')->with('message', 'Memory shared successfully!');
+    }
+
+    /**
+     * Display the specified resource (The Details Page).
+     */
+    public function show(string $id)
+    {
+        $post = Post::with(['user', 'country', 'comments.user', 'media'])->findOrFail($id);
+        return view('posts.show', compact('post'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $post = Post::findOrFail($id);
+        $this->authorize('update', $post);
+
+        return view('posts.edit', compact('post'));
     }
 
     /**
@@ -102,37 +125,16 @@ class PostController extends Controller
     }
 
     /**
-     * Display the specified resource (The Details Page).
-     */
-    public function show(string $id)
-    {
-        $post = Post::with(['user', 'country', 'comments.user', 'media'])->findOrFail($id);
-        return view('posts.show', compact('post'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $post = Post::findOrFail($id);
-        $this->authorize('update', $post); // Security Check
-
-        return view('posts.edit', compact('post'));
-    }
-
-
-    /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        $post = Post::findOrFail($id);
-        $this->authorize('delete', $post); // Security Check
-        
+        $post = Post::with('media')->findOrFail($id); // Load media to delete files
+        $this->authorize('delete', $post);
 
-        if ($post->image) {
-            Storage::disk('public')->delete(str_replace('storage/', '', $post->image));
+        foreach ($post->media as $media) {
+            $relativePath = str_replace('storage/', '', $media->file_path);
+            Storage::disk('public')->delete($relativePath);
         }
 
         $post->delete();

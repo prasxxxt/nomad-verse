@@ -5,11 +5,41 @@
     <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 bg-white border-b border-gray-200">
-                <h2 class="text-2xl font-bold mb-6 text-gray-800">Edit Your Passport</h2>
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Edit Your Profile</h2>
 
                 <form action="{{ route('profile.update_public') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Display Name</label>
+                            <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" 
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                            @error('name') <p class="text-red-500 text-xs italic">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
+                            <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" 
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                            @error('email') <p class="text-red-500 text-xs italic">{{ $message }}</p> @enderror
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="username">Username (Handle)</label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                    @
+                                </span>
+                                <input type="text" name="username" id="username" value="{{ old('username', $user->profile->username) }}" 
+                                    class="shadow appearance-none border rounded-r w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Unique handle for your profile URL. Letters, numbers, dashes only.</p>
+                            @error('username') <p class="text-red-500 text-xs italic">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <hr class="mb-6 border-gray-200">
 
                     <div class="mb-6">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="bio">About Me</label>
