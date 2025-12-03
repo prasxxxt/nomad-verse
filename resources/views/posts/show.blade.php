@@ -21,7 +21,10 @@
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900">{{ $post->title }}</h1>
                         <p class="text-gray-500 text-sm mt-1">
-                            Posted by <span class="font-semibold">{{ $post->user->name }}</span> 
+                            Posted by
+                            <a href="{{ route('users.show', $post->user->profile->username) }}" class="font-semibold hover:underline">
+                                {{ $post->user->name }}
+                            </a> 
                             &bull; {{ $post->created_at->diffForHumans() }}
                         </p>
                     </div>

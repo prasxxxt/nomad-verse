@@ -8,33 +8,30 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [\App\Http\Controllers\PostController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-Route::get('/users/{user}', [App\Http\Controllers\UserController::class, 'show'])
+Route::get('/users/{username}', [App\Http\Controllers\UserController::class, 'show'])
     ->name('users.show');
 
-Route::post('/posts/{post}/comments', [App\Http\Controllers\CommentController::class, 'store'])
-    ->name('comments.store');
 
-Route::post('/likes/{type}/{id}', [App\Http\Controllers\LikeController::class, 'toggle'])
-    ->name('likes.toggle');
+Route::middleware(['auth', 'verified'])->group(function () {
+    
+    Route::get('/dashboard', [PostController::class, 'index'])->name('dashboard');
 
-Route::post('/users/{user}/follow', [App\Http\Controllers\FollowController::class, 'toggle'])
-    ->name('users.follow');
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
 
-Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])
-    ->name('notifications.index');
+    Route::resource('posts', PostController::class);
 
-Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
 
-Route::middleware(['auth'])->group(function () {
-    Route::resource('posts', PostController::class);
+    Route::post('/posts/{post}/comments', [App\Http\Controllers\CommentController::class, 'store'])
+        ->name('comments.store');
+
+    Route::post('/likes/{type}/{id}', [App\Http\Controllers\LikeController::class, 'toggle'])
+        ->name('likes.toggle');
+
+    Route::post('/users/{user}/follow', [App\Http\Controllers\FollowController::class, 'toggle'])
+        ->name('users.follow');
 });
 
 require __DIR__.'/auth.php';

@@ -27,7 +27,7 @@
                             <div>
                                 <div class="flex items-center space-x-2">
                                     <p class="font-bold text-gray-900 text-sm">
-                                        <a href="{{ route('users.show', $post->user) }}" class="font-bold text-gray-900 text-sm hover:underline">
+                                        <a href="{{ route('users.show', $post->user->profile->username) }}" class="font-bold text-gray-900 text-sm hover:underline">
                                             {{ $post->user->name }}
                                         </a>
                                     </p>

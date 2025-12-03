@@ -7,14 +7,11 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    /**
-     * Display the specified user's public profile.
-     */
-    public function show(User $user)
-    {
-        // Ensure the profile relation is loaded
-        $user->load('profile');
 
+    public function show($username)
+    {
+        $profile = \App\Models\Profile::where('username', $username)->firstOrFail();
+        $user = $profile->user;
         $posts = $user->posts()
             ->with(['user', 'country', 'likes', 'comments'])
             ->latest()
