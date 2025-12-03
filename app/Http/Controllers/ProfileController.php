@@ -57,4 +57,69 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Display the public profile edit form.
+     */
+    public function editPublic(Request $request): View
+    {
+        $countries = \App\Models\Country::orderBy('name')->get();
+        
+        return view('profile.edit_public', [
+            'user' => $request->user(),
+            'countries' => $countries,
+        ]);
+    }
+
+    /**
+     * Update the user's public profile information.
+     */
+    public function updatePublic(Request $request): RedirectResponse
+    {
+
+        $validated = $request->validate([
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'country_id' => ['nullable', 'exists:countries,id'],
+            'twitter' => ['nullable', 'url', 'max:255'],
+            'instagram' => ['nullable', 'url', 'max:255'],
+            'profile_photo' => ['nullable', 'image', 'max:2048'],
+            'remove_photo' => ['nullable', 'boolean'],
+        ]);
+
+        $user = $request->user();
+        $profile = $user->profile;
+
+        if ($request->boolean('remove_photo')) {
+            if ($profile->profile_photo) {
+                $relativePath = str_replace('/storage/', '', $profile->profile_photo);
+                $relativePath = str_replace('storage/', '', $relativePath);
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                
+                $profile->profile_photo = null;
+            }
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            if ($profile->profile_photo) {
+                $relativePath = str_replace('/storage/', '', $profile->profile_photo);
+                $relativePath = str_replace('storage/', '', $relativePath);
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+            }
+            
+            $path = $request->file('profile_photo')->store('profiles', 'public');
+            $profile->profile_photo = 'storage/' . $path;
+        }
+
+        $socials = json_decode($profile->social_links, true) ?? [];
+        $socials['twitter'] = $validated['twitter'];
+        $socials['instagram'] = $validated['instagram'];
+
+        
+        $profile->bio = $validated['bio'];
+        $profile->country_id = $validated['country_id'];
+        $profile->social_links = json_encode($socials);
+        $profile->save();
+
+        return redirect()->route('users.show', $profile->username)->with('status', 'Passport updated!');
+    }
 }

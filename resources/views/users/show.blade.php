@@ -31,6 +31,26 @@
                                 </span>
                             @endif
                         </div>
+                        @if($user->profile->country)
+                            <div class="mt-2 text-gray-600 flex items-center text-sm">
+                                <span class="mr-1">{{ $user->profile->country->flag }}</span>
+                                <span>Based in {{ $user->profile->country->name }}</span>
+                            </div>
+                        @endif
+
+                        @php
+                            $socials = json_decode($user->profile->social_links, true);
+                        @endphp
+                        @if(!empty($socials['twitter']) || !empty($socials['instagram']))
+                            <div class="mt-3 flex space-x-3">
+                                @if(!empty($socials['twitter']))
+                                    <a href="{{ $socials['twitter'] }}" target="_blank" class="text-blue-400 hover:text-blue-600 font-bold text-sm">Twitter</a>
+                                @endif
+                                @if(!empty($socials['instagram']))
+                                    <a href="{{ $socials['instagram'] }}" target="_blank" class="text-pink-600 hover:text-pink-800 font-bold text-sm">Instagram</a>
+                                @endif
+                            </div>
+                        @endif
 
                         @if(auth()->id() !== $user->id)
                             <div class="mt-4 md:mt-0">
