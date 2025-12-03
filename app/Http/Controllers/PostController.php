@@ -13,9 +13,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with(['user', 'country', 'likes', 'comments'])
-            ->latest()
-            ->paginate(10);
+        $posts = Post::with(['user', 'country', 'likes', 'comments', 'media'])->latest()->paginate(10);
 
         return view('posts.index', compact('posts'));
     }
@@ -29,31 +27,78 @@ class PostController extends Controller
         return view('posts.create');
     }
 
-    /**
+/**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        $this->authorize('create', Post::class); // Security Check
+        $this->authorize('create', Post::class);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'media' => 'nullable|array',
+            'media.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,qt|max:10240', // Max 10MB per file
         ]);
 
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('posts', 'public');
-        }
-
-        $request->user()->posts()->create([
+        $post = $request->user()->posts()->create([
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'image' => $imagePath ? 'storage/' . $imagePath : null, 
-            'country_id' => \App\Models\Country::inRandomOrder()->first()->id,
+            'country_id' => \App\Models\Country::inRandomOrder()->first()->id, // Temporary fallback
         ]);
 
-        return redirect()->route('posts.index')->with('message', 'Post created successfully!');
+        if ($request->hasFile('media')) {
+            foreach ($request->file('media') as $file) {
+                
+                $path = $file->store('posts', 'public');
+                
+                $mime = $file->getMimeType();
+                $type = str_contains($mime, 'video') ? 'video' : 'image';
+
+                $post->media()->create([
+                    'file_path' => 'storage/' . $path,
+                    'file_type' => $type,
+                ]);
+            }
+        }
+
+        return redirect()->route('posts.index')->with('message', 'Memory shared successfully!');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $post = Post::findOrFail($id);
+        $this->authorize('update', $post);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'media' => 'nullable|array',
+            'media.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,qt|max:10240',
+        ]);
+
+        $post->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+        ]);
+
+        if ($request->hasFile('media')) {
+            foreach ($request->file('media') as $file) {
+                $path = $file->store('posts', 'public');
+                $mime = $file->getMimeType();
+                $type = str_contains($mime, 'video') ? 'video' : 'image';
+
+                $post->media()->create([
+                    'file_path' => 'storage/' . $path,
+                    'file_type' => $type,
+                ]);
+            }
+        }
+
+        return redirect()->route('posts.show', $post->id)->with('message', 'Post updated successfully!');
     }
 
     /**
@@ -61,7 +106,7 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        $post = Post::with(['user', 'country', 'comments.user'])->findOrFail($id);
+        $post = Post::with(['user', 'country', 'comments.user', 'media'])->findOrFail($id);
         return view('posts.show', compact('post'));
     }
 
@@ -76,36 +121,6 @@ class PostController extends Controller
         return view('posts.edit', compact('post'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $post = Post::findOrFail($id);
-        $this->authorize('update', $post); // Security Check
-        
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        if ($request->hasFile('image')) {
-            if ($post->image) {
-                Storage::disk('public')->delete(str_replace('storage/', '', $post->image));
-            }
-            $imagePath = $request->file('image')->store('posts', 'public');
-            $post->image = 'storage/' . $imagePath;
-        }
-
-        $post->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-        ]);
-
-        return redirect()->route('posts.show', $post->id)->with('message', 'Post updated successfully!');
-    }
 
     /**
      * Remove the specified resource from storage.

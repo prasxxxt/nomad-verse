@@ -25,14 +25,20 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="image">Photo</label>
-                        <input type="file" name="image" id="image" class="block w-full text-sm text-gray-500
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="media">
+                            Photos & Videos
+                        </label>
+                        <input type="file" name="media[]" id="media" multiple 
+                            accept="image/*,video/mp4,video/quicktime"
+                            class="block w-full text-sm text-gray-500
                             file:mr-4 file:py-2 file:px-4
                             file:rounded-full file:border-0
                             file:text-sm file:font-semibold
                             file:bg-blue-50 text-blue-700
                             hover:file:bg-blue-100">
-                        @error('image') <p class="text-red-500 text-xs italic">{{ $message }}</p> @enderror
+                        <p class="text-xs text-gray-500 mt-1">Supported: JPG, PNG, MP4, MOV (Max 10MB per file)</p>
+                        @error('media') <p class="text-red-500 text-xs italic">{{ $message }}</p> @enderror
+                        @error('media.*') <p class="text-red-500 text-xs italic">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="flex items-center justify-between">

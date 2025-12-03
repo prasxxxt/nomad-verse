@@ -48,8 +48,19 @@
                         @endif
                     </div>
 
-                    @if($post->image)
-                        <img src="{{ asset($post->image) }}" alt="{{ $post->title }}" class="w-full h-auto object-cover">
+                    @if($post->media->count() > 0)
+                        <div class="space-y-1"> @foreach($post->media as $media)
+                                @if($media->file_type === 'video')
+                                    <video controls class="w-full h-auto max-h-[600px] object-contain bg-black rounded-t-lg">
+                                        <source src="{{ asset($media->file_path) }}" type="video/mp4">
+                                    </video>
+                                @else
+                                    <img src="{{ asset($media->file_path) }}" 
+                                        alt="Post media" 
+                                        class="w-full h-auto object-cover {{ $loop->first ? 'rounded-t-xl' : '' }}">
+                                @endif
+                            @endforeach
+                        </div>
                     @endif
 
                     <div class="p-4">
