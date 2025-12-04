@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\Comment;
+use App\Models\User;
+use App\Notifications\NewLikeNotification;
 
 class LikeController extends Controller
 {
@@ -20,15 +22,20 @@ class LikeController extends Controller
         }
 
         $user = auth()->user();
+        
         $existingLike = $model->likes()->where('user_id', $user->id)->first();
 
         $liked = false;
         if ($existingLike) {
-            $existingLike->delete(); // Unlike
+            $existingLike->delete();
             $liked = false;
         } else {
-            $model->likes()->create(['user_id' => $user->id]); // Like
+            $model->likes()->create(['user_id' => $user->id]);
             $liked = true;
+
+            if ($model->user_id !== $user->id) {
+                $model->user->notify(new NewLikeNotification($user, $model));
+            }
         }
 
         return response()->json([

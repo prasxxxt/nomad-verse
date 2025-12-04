@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewPostNotification;
 
 class PostController extends Controller
 {
@@ -63,6 +65,12 @@ class PostController extends Controller
                     'file_type' => $type,
                 ]);
             }
+        }
+
+        $followers = $request->user()->followers;
+
+        if ($followers->count() > 0) {
+            Notification::send($followers, new NewPostNotification($post, $request->user()));
         }
 
         return redirect()->route('posts.index')->with('message', 'Memory shared successfully!');
@@ -129,7 +137,7 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        $post = Post::with('media')->findOrFail($id); // Load media to delete files
+        $post = Post::with('media')->findOrFail($id);
         $this->authorize('delete', $post);
 
         foreach ($post->media as $media) {
