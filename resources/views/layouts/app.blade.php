@@ -22,26 +22,8 @@
                 @include('layouts.sidebar')
             @endauth
 
-            <main class="flex-1 max-w-[600px] w-full mx-auto">
+            <main class="flex-1 max-w-3xl w-full mx-auto pb-16 md:pb-0"> 
                 @if(isset($slot))
-                    {{ $slot }}
-                @else
-                    @yield('content')
-                @endif
-            </main>
-
-            @auth
-                @include('layouts.rightbar')
-            @endauth
-
-        </div>
-        <div class="flex justify-center min-h-screen">
-            
-            @auth
-                @include('layouts.sidebar')
-            @endauth
-
-            <main class="flex-1 max-w-[600px] w-full mx-auto pb-16 md:pb-0"> @if(isset($slot))
                     {{ $slot }}
                 @else
                     @yield('content')
@@ -105,23 +87,40 @@
             }
 
             function submitComment(event, postId) {
-                event.preventDefault();
-                const input = document.getElementById(`comment-input-${postId}`);
-                if(!input.value.trim()) return;
+                event.preventDefault(); // Stop the page from reloading
 
+                const inputField = document.getElementById(`comment-input-${postId}`);
+                const content = inputField.value;
+                
+                if (!content.trim()) return;
+
+                // Send request to Laravel
                 fetch(`/posts/${postId}/comments`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
-                    body: JSON.stringify({ content: input.value })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ content: content })
                 })
-                .then(r => r.json())
-                .then(d => {
-                    if(d.success) {
-                        input.value = '';
-                        alert('Comment Posted!');
-                        toggleCommentBox(postId);
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 1. Clear the input field
+                        inputField.value = '';
+
+                        // 2. Find the comment count element
+                        const countSpan = document.getElementById(`post-comment-count-${postId}`);
+                        
+                        // 3. Get the current number, convert to int, add 1, and update the HTML
+                        let currentCount = parseInt(countSpan.innerText.trim());
+                        countSpan.innerText = currentCount + 1;
+
+                        // Optional: You might also want to append the new comment HTML to the comment list immediately
+                        // so the user sees it without refreshing.
                     }
-                });
+                })
+                .catch(error => console.error('Error:', error));
             }
         </script>
     </body>

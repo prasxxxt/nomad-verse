@@ -2,16 +2,16 @@
 
 @section('content')
 <div class="py-8 bg-gray-50 min-h-screen">
-    <div class="max-w-[470px] mx-auto w-full">
+    <div class="max-w-3xl mx-auto w-full">
         
-        <div class="flex justify-between items-center mb-6 px-1">
+        <div class="flex justify-between items-center mb-6 px-4">
             <h2 class="text-xl font-bold text-gray-800 tracking-tight">Nomad Feed</h2>
             <a href="{{ route('posts.create') }}" class="text-blue-500 font-semibold text-sm hover:text-blue-700">
                 + Create Post
             </a>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-6">
             @foreach ($posts as $post)
                 <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                     
@@ -50,16 +50,16 @@
                         @endif
                     </div>
 
-                    @if($post->media->count() > 0)
-                        <div class="relative group bg-black w-full h-[500px]">
+                    <div class="relative bg-white group w-full">
+                        @if($post->media->count() > 0)
                             
                             <div id="carousel-{{ $post->id }}" 
-                                 class="flex h-full w-full overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide">
+                                 class="flex h-[500px] w-full overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth">
                                 
                                 @foreach($post->media as $media)
-                                    <div class="min-w-full w-full h-full flex-shrink-0 snap-center flex items-center justify-center relative">
+                                    <div class="min-w-full w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-white relative">
                                         @if($media->file_type === 'video')
-                                            <video controls class="max-w-full max-h-full object-contain">
+                                            <video controls class="max-w-full max-h-full object-contain bg-black">
                                                 <source src="{{ asset($media->file_path) }}" type="video/mp4">
                                             </video>
                                         @else
@@ -72,37 +72,38 @@
                             </div>
 
                             @if($post->media->count() > 1)
-                                <button onclick="scrollCarousel({{ $post->id }}, -1)" 
-                                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 rounded-full p-1.5 shadow-lg transition opacity-0 group-hover:opacity-100 z-10 focus:outline-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
+                                <div class="absolute inset-0 flex items-center justify-between px-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <button onclick="scrollCarousel({{ $post->id }}, -1)" class="bg-white/90 hover:bg-white text-gray-800 rounded-full p-1.5 shadow-md pointer-events-auto cursor-pointer border border-gray-200">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                                    </button>
+                                    <button onclick="scrollCarousel({{ $post->id }}, 1)" class="bg-white/90 hover:bg-white text-gray-800 rounded-full p-1.5 shadow-md pointer-events-auto cursor-pointer border border-gray-200">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                    </button>
+                                </div>
 
-                                <button onclick="scrollCarousel({{ $post->id }}, 1)" 
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 rounded-full p-1.5 shadow-lg transition opacity-0 group-hover:opacity-100 z-10 focus:outline-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-
-                                <div class="absolute top-3 right-3 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none z-10">
+                                <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+                                    @foreach($post->media as $key => $media)
+                                        <div id="dot-{{ $post->id }}-{{ $key }}" class="h-1.5 w-1.5 rounded-full {{ $key === 0 ? 'bg-blue-500' : 'bg-gray-300' }} transition-colors shadow-sm"></div>
+                                    @endforeach
+                                </div>
+                                
+                                <div class="absolute top-3 right-3 bg-gray-900/70 text-white text-[10px] font-bold px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none">
                                     <span id="counter-{{ $post->id }}">1</span>/{{ $post->media->count() }}
                                 </div>
                             @endif
-                        </div>
-                    @endif
+                        @endif
+                    </div>
 
                     <div class="p-3 pb-1">
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-4">
-                                <button onclick="toggleLike('post', {{ $post->id }}, this)" class="group focus:outline-none transition transform active:scale-125">
+                                <button onclick="toggleLike('post', {{ $post->id }}, this)" class="group focus:outline-none transition transform active:scale-125" aria-label="Like Post">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 {{ $post->likes->contains('user_id', auth()->id()) ? 'text-red-500 fill-current' : 'text-gray-800 hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
                                 </button>
 
-                                <button onclick="toggleCommentBox({{ $post->id }})" class="focus:outline-none hover:opacity-60">
+                                <button onclick="toggleCommentBox({{ $post->id }})" class="focus:outline-none hover:opacity-60" aria-label="Comment">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                     </svg>
@@ -110,8 +111,10 @@
                             </div>
                         </div>
 
-                        <div class="font-bold text-sm text-gray-900 mb-1">
-                            <span id="post-like-count-{{ $post->id }}">{{ $post->likes->count() }}</span> likes
+                        <div class="font-bold text-sm text-gray-900 mb-1 flex items-center gap-2">
+                            <span><span id="post-like-count-{{ $post->id }}">{{ $post->likes->count() }}</span> likes</span>
+                            <span class="text-gray-400 font-normal">&bull;</span>
+                            <span><span id="post-comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span> comments</span>
                         </div>
 
                         <div class="mb-1 text-sm">
@@ -149,7 +152,6 @@
 </div>
 
 <style>
-    /* Hide scrollbar logic */
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
@@ -158,13 +160,10 @@
     function scrollCarousel(postId, direction) {
         const container = document.getElementById(`carousel-${postId}`);
         const counter = document.getElementById(`counter-${postId}`);
-        
-        // Scroll exactly one container width
         const scrollAmount = container.clientWidth;
         
         container.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
 
-        // Update Counter
         setTimeout(() => {
             const index = Math.round(container.scrollLeft / container.clientWidth) + 1;
             if(counter) {
@@ -172,7 +171,25 @@
                 let validIndex = Math.max(1, Math.min(index, total));
                 counter.innerText = validIndex;
             }
-        }, 300);
+
+            // Update Dots
+            const total = parseInt(counter.nextSibling.textContent.replace('/', ''));
+            for(let i = 0; i < total; i++) {
+                let dot = document.getElementById(`dot-${postId}-${i}`);
+                if(dot) {
+                    dot.classList.remove('bg-blue-500');
+                    dot.classList.add('bg-gray-300');
+                }
+            }
+            const dotIndex = Math.round(container.scrollLeft / container.clientWidth);
+            let activeDot = document.getElementById(`dot-${postId}-${dotIndex}`);
+            if(activeDot) {
+                activeDot.classList.remove('bg-gray-300');
+                activeDot.classList.add('bg-blue-500');
+            }
+
+        }, 400);
     }
+    
 </script>
 @endsection
