@@ -35,6 +35,28 @@
             @endauth
 
         </div>
+        <div class="flex justify-center min-h-screen">
+            
+            @auth
+                @include('layouts.sidebar')
+            @endauth
+
+            <main class="flex-1 max-w-[600px] w-full mx-auto pb-16 md:pb-0"> @if(isset($slot))
+                    {{ $slot }}
+                @else
+                    @yield('content')
+                @endif
+            </main>
+
+            @auth
+                @include('layouts.rightbar')
+            @endauth
+
+        </div>
+
+        @auth
+            @include('layouts.navigation')
+        @endauth
 
         <script>
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
