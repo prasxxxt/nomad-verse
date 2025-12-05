@@ -33,10 +33,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/users/{user}/follow', [App\Http\Controllers\FollowController::class, 'toggle'])
         ->name('users.follow');
 
-    Route::get('/profile/customize', [App\Http\Controllers\ProfileController::class, 'editPublic'])
+    Route::get('/settings', [App\Http\Controllers\ProfileController::class, 'editPublic'])
         ->name('profile.edit_public');
         
-    Route::patch('/profile/customize', [App\Http\Controllers\ProfileController::class, 'updatePublic'])
+    Route::patch('/settings', [App\Http\Controllers\ProfileController::class, 'updatePublic'])
         ->name('profile.update_public');
 });
 
