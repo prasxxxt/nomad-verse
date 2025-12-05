@@ -76,10 +76,10 @@ class ProfileController extends Controller
         $user = $request->user();
         $profile = $user->profile;
 
+        // 1. Validate
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:profiles,username,' . $profile->id],
             'bio' => ['nullable', 'string', 'max:1000'],
             'country_id' => ['nullable', 'exists:countries,id'],
@@ -87,45 +87,40 @@ class ProfileController extends Controller
             'instagram' => ['nullable', 'url', 'max:255'],
             'profile_photo' => ['nullable', 'image', 'max:2048'],
             'remove_photo' => ['nullable', 'boolean'],
+            'become_traveller' => ['nullable', 'boolean'], // <--- NEW VALIDATION
         ]);
 
-        $user->fill([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-        ]);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
+        // 2. Update User Account
+        $user->fill(['name' => $validated['name'], 'email' => $validated['email']]);
+        if ($user->isDirty('email')) $user->email_verified_at = null;
         $user->save();
 
-        if ($request->boolean('remove_photo')) {
-            if ($profile->profile_photo) {
-                $relativePath = str_replace('storage/', '', $profile->profile_photo);
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
-                $profile->profile_photo = null;
-            }
+        // 3. Handle Role Upgrade (Irreversible)
+        if ($request->boolean('become_traveller') && $profile->role === 'viewer') {
+            $profile->role = 'traveller';
         }
 
+        // 4. Handle Photo
+        if ($request->boolean('remove_photo') && $profile->profile_photo) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete(str_replace('storage/', '', $profile->profile_photo));
+            $profile->profile_photo = null;
+        }
         if ($request->hasFile('profile_photo')) {
-            if ($profile->profile_photo) {
-                $relativePath = str_replace('storage/', '', $profile->profile_photo);
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
-            }
-            $path = $request->file('profile_photo')->store('profiles', 'public');
-            $profile->profile_photo = 'storage/' . $path;
+            if ($profile->profile_photo) \Illuminate\Support\Facades\Storage::disk('public')->delete(str_replace('storage/', '', $profile->profile_photo));
+            $profile->profile_photo = 'storage/' . $request->file('profile_photo')->store('profiles', 'public');
         }
 
+        // 5. Save Profile
         $socials = json_decode($profile->social_links, true) ?? [];
         $socials['twitter'] = $validated['twitter'];
         $socials['instagram'] = $validated['instagram'];
-
+        
         $profile->username = $validated['username'];
         $profile->bio = $validated['bio'];
         $profile->country_id = $validated['country_id'];
         $profile->social_links = json_encode($socials);
         $profile->save();
 
-        return redirect()->route('users.show', $profile->username)->with('status', 'Profile updated successfully!');
+        return redirect()->route('users.show', $profile->username)->with('status', 'Profile updated!');
     }
 }
