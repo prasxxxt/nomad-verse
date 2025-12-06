@@ -76,7 +76,6 @@ class ProfileController extends Controller
         $user = $request->user();
         $profile = $user->profile;
 
-        // 1. Validate
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
@@ -90,17 +89,14 @@ class ProfileController extends Controller
             'become_traveller' => ['nullable', 'boolean'], // <--- NEW VALIDATION
         ]);
 
-        // 2. Update User Account
         $user->fill(['name' => $validated['name'], 'email' => $validated['email']]);
         if ($user->isDirty('email')) $user->email_verified_at = null;
         $user->save();
 
-        // 3. Handle Role Upgrade (Irreversible)
         if ($request->boolean('become_traveller') && $profile->role === 'viewer') {
             $profile->role = 'traveller';
         }
 
-        // 4. Handle Photo
         if ($request->boolean('remove_photo') && $profile->profile_photo) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete(str_replace('storage/', '', $profile->profile_photo));
             $profile->profile_photo = null;
@@ -110,7 +106,6 @@ class ProfileController extends Controller
             $profile->profile_photo = 'storage/' . $request->file('profile_photo')->store('profiles', 'public');
         }
 
-        // 5. Save Profile
         $socials = json_decode($profile->social_links, true) ?? [];
         $socials['twitter'] = $validated['twitter'];
         $socials['instagram'] = $validated['instagram'];

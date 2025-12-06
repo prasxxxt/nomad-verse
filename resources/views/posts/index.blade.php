@@ -2,41 +2,41 @@
 
 @section('content')
 <div class="py-8 bg-gray-50 min-h-screen">
-    <div class="max-w-3xl mx-auto w-full">
+    <div class="max-w-3xl mx-auto sm:px-0">
         
         <div class="flex justify-between items-center mb-6 px-4">
             <h2 class="text-xl font-bold text-gray-800 tracking-tight">Nomad Feed</h2>
-            <a href="{{ route('posts.create') }}" class="text-blue-500 font-semibold text-sm hover:text-blue-700">
-                + Create Post
+            @if(auth()->user()->profile->role !== 'viewer')
+            <a href="{{ route('posts.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition text-sm flex items-center gap-2">
+                <span>+</span> New Post
             </a>
+            @endif
         </div>
 
         <div class="space-y-6">
             @foreach ($posts as $post)
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div class="bg-white border border-gray-200 sm:rounded-xl shadow-sm overflow-hidden">
                     
-                    <div class="flex items-center justify-between p-3">
+                    <div class="p-3 flex justify-between items-center">
                         <div class="flex items-center gap-3">
-                            <a href="{{ route('users.show', $post->user->profile->username) }}" class="block relative">
-                                <div class="p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 to-fuchsia-600">
-                                    @if($post->user->profile->profile_photo)
-                                        <img src="{{ asset($post->user->profile->profile_photo) }}" alt="{{ $post->user->name }}" class="h-8 w-8 rounded-full object-cover border-2 border-white bg-white">
-                                    @else
-                                        <div class="h-8 w-8 rounded-full bg-white flex items-center justify-center text-xs font-bold text-gray-700 border-2 border-white">
-                                            {{ substr($post->user->name, 0, 1) }}
-                                        </div>
-                                    @endif
-                                </div>
+                            <a href="{{ route('users.show', $post->user->profile->username) }}" class="block">
+                                @if($post->user->profile->profile_photo)
+                                    <img src="{{ asset($post->user->profile->profile_photo) }}" alt="{{ $post->user->name }}" class="h-9 w-9 rounded-full object-cover border border-gray-200">
+                                @else
+                                    <div class="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-200 text-sm">
+                                        {{ substr($post->user->name, 0, 1) }}
+                                    </div>
+                                @endif
                             </a>
                             
-                            <div class="leading-tight">
-                                <a href="{{ route('users.show', $post->user->profile->username) }}" class="font-semibold text-sm text-gray-900 hover:opacity-70">
-                                    {{ $post->user->profile->username ?? $post->user->name }}
+                            <div>
+                                <a href="{{ route('users.show', $post->user->profile->username) }}" class="font-bold text-gray-900 text-sm hover:underline block leading-tight">
+                                    {{ $post->user->profile->username }}
                                 </a>
                                 @if($post->country)
-                                    <p class="text-[11px] text-gray-500 truncate max-w-[150px]">
+                                    <span class="text-xs text-gray-500 block leading-tight">
                                         {{ $post->country->name }}
-                                    </p>
+                                    </span>
                                 @endif
                             </div>
                         </div>
@@ -44,86 +44,94 @@
                         @if(auth()->id() !== $post->user_id)
                             <button 
                                 onclick="toggleFollow({{ $post->user_id }}, this)"
-                                class="text-xs font-semibold {{ auth()->user()->follows->contains($post->user_id) ? 'text-gray-400' : 'text-blue-500' }}">
-                                {{ auth()->user()->follows->contains($post->user_id) ? 'Following' : 'Follow' }}
+                                class="text-xs font-bold transition px-3 py-1 rounded-md {{ auth()->user()->follows->contains($post->user_id) ? 'bg-gray-100 text-gray-600' : 'bg-blue-50 text-blue-600' }}">
+                                {{ auth()->user()->follows->contains($post->user_id) ? 'Unfollow' : 'Follow' }}
                             </button>
                         @endif
                     </div>
 
-                    <div class="relative bg-white group w-full">
-                        @if($post->media->count() > 0)
+                    <div class="px-3 pb-2">
+                        <a href="{{ route('posts.show', $post->id) }}" class="font-bold text-gray-900 text-lg hover:text-blue-600 transition block leading-tight">
+                            {{ $post->title }}
+                        </a>
+                    </div>
+
+                    @if($post->media->count() > 0)
+                        <div class="relative bg-white group" style="height: 500px; width: 100%; position: relative;">
                             
                             <div id="carousel-{{ $post->id }}" 
-                                 class="flex h-[500px] w-full overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth">
+                                 class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth"
+                                 style="height: 100%; width: 100%; display: flex; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none;">
                                 
                                 @foreach($post->media as $media)
-                                    <div class="min-w-full w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-white relative">
-                                        @if($media->file_type === 'video')
-                                            <video controls class="max-w-full max-h-full object-contain bg-black">
-                                                <source src="{{ asset($media->file_path) }}" type="video/mp4">
-                                            </video>
-                                        @else
-                                            <img src="{{ asset($media->file_path) }}" 
-                                                 alt="Post media" 
-                                                 class="max-w-full max-h-full object-contain">
-                                        @endif
+                                    <div class="snap-center relative flex items-center justify-center bg-white"
+                                         style="min-width: 100%; flex: 0 0 100%; height: 100%;">
+                                        
+                                        <a href="{{ route('posts.show', $post->id) }}" class="w-full h-full flex items-center justify-center">
+                                            @if($media->file_type === 'video')
+                                                <video controls style="width: 100%; height: 100%; object-fit: contain;">
+                                                    <source src="{{ asset($media->file_path) }}" type="video/mp4">
+                                                </video>
+                                            @else
+                                                <img src="{{ asset($media->file_path) }}" 
+                                                     alt="Post media" 
+                                                     style="width: 100%; height: 100%; object-fit: cover;">
+                                            @endif
+                                        </a>
+
                                     </div>
                                 @endforeach
                             </div>
 
                             @if($post->media->count() > 1)
-                                <div class="absolute inset-0 flex items-center justify-between px-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <button onclick="scrollCarousel({{ $post->id }}, -1)" class="bg-white/90 hover:bg-white text-gray-800 rounded-full p-1.5 shadow-md pointer-events-auto cursor-pointer border border-gray-200">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                                    </button>
-                                    <button onclick="scrollCarousel({{ $post->id }}, 1)" class="bg-white/90 hover:bg-white text-gray-800 rounded-full p-1.5 shadow-md pointer-events-auto cursor-pointer border border-gray-200">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                    </button>
-                                </div>
+                                <button onclick="scrollCarousel({{ $post->id }}, -1)" 
+                                    style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 50; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; padding: 8px; cursor: pointer;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" style="height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
 
-                                <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
-                                    @foreach($post->media as $key => $media)
-                                        <div id="dot-{{ $post->id }}-{{ $key }}" class="h-1.5 w-1.5 rounded-full {{ $key === 0 ? 'bg-blue-500' : 'bg-gray-300' }} transition-colors shadow-sm"></div>
-                                    @endforeach
-                                </div>
-                                
-                                <div class="absolute top-3 right-3 bg-gray-900/70 text-white text-[10px] font-bold px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none">
+                                <button onclick="scrollCarousel({{ $post->id }}, 1)" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 50; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; padding: 8px; cursor: pointer;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" style="height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+
+                                <div style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 50;">
                                     <span id="counter-{{ $post->id }}">1</span>/{{ $post->media->count() }}
                                 </div>
                             @endif
-                        @endif
-                    </div>
+                        </div>
+                    @endif
 
-                    <div class="p-3 pb-1">
-                        <div class="flex items-center justify-between mb-2">
+                    <div class="p-3">
+                        <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-4">
-                                <button onclick="toggleLike('post', {{ $post->id }}, this)" class="group focus:outline-none transition transform active:scale-125" aria-label="Like Post">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 {{ $post->likes->contains('user_id', auth()->id()) ? 'text-red-500 fill-current' : 'text-gray-800 hover:text-gray-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <button onclick="toggleLike('post', {{ $post->id }}, this)" class="focus:outline-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 transition {{ $post->likes->contains('user_id', auth()->id()) ? 'text-red-500 fill-current' : 'text-gray-900 hover:text-gray-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
                                 </button>
 
-                                <button onclick="toggleCommentBox({{ $post->id }})" class="focus:outline-none hover:opacity-60" aria-label="Comment">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <button onclick="toggleCommentBox({{ $post->id }})" class="focus:outline-none text-gray-900 hover:text-blue-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                     </svg>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="font-bold text-sm text-gray-900 mb-1 flex items-center gap-2">
-                            <span><span id="post-like-count-{{ $post->id }}">{{ $post->likes->count() }}</span> likes</span>
-                            <span class="text-gray-400 font-normal">&bull;</span>
-                            <span><span id="post-comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span> comments</span>
+                        <div class="font-bold text-sm text-gray-900 mb-1">
+                            <span id="post-like-count-{{ $post->id }}">{{ $post->likes->count() }}</span> likes
                         </div>
 
-                        <div class="mb-1 text-sm">
-                            <span class="font-bold text-gray-900 mr-1">{{ $post->user->profile->username ?? $post->user->name }}</span>
-                            <span class="text-gray-800">{{ $post->description }}</span>
+                        <div class="mb-2 text-sm leading-snug">
+                            <span class="text-gray-800">{{ Str::limit($post->description, 150) }}</span>
                         </div>
 
                         @if($post->comments->count() > 0)
-                            <a href="{{ route('posts.show', $post->id) }}" class="text-gray-500 text-sm mb-1 block">
+                            <a href="{{ route('posts.show', $post->id) }}" class="text-gray-500 text-sm mb-2 block">
                                 View all {{ $post->comments->count() }} comments
                             </a>
                         @endif
@@ -133,9 +141,9 @@
                         </p>
 
                         <div id="comment-box-{{ $post->id }}" class="hidden pt-2 border-t border-gray-100">
-                            <form onsubmit="submitComment(event, {{ $post->id }})" class="flex items-center gap-2">
+                            <form onsubmit="submitComment(event, {{ $post->id }})" class="flex gap-2">
                                 <input type="text" id="comment-input-{{ $post->id }}" 
-                                    class="flex-1 bg-transparent text-sm border-none focus:ring-0 px-0 placeholder-gray-400 h-8" 
+                                    class="flex-1 bg-transparent text-sm border-none focus:ring-0 px-0 placeholder-gray-400" 
                                     placeholder="Add a comment..." autocomplete="off">
                                 <button type="submit" class="text-blue-500 font-semibold text-sm hover:text-blue-700 disabled:opacity-50">Post</button>
                             </form>
@@ -171,25 +179,7 @@
                 let validIndex = Math.max(1, Math.min(index, total));
                 counter.innerText = validIndex;
             }
-
-            // Update Dots
-            const total = parseInt(counter.nextSibling.textContent.replace('/', ''));
-            for(let i = 0; i < total; i++) {
-                let dot = document.getElementById(`dot-${postId}-${i}`);
-                if(dot) {
-                    dot.classList.remove('bg-blue-500');
-                    dot.classList.add('bg-gray-300');
-                }
-            }
-            const dotIndex = Math.round(container.scrollLeft / container.clientWidth);
-            let activeDot = document.getElementById(`dot-${postId}-${dotIndex}`);
-            if(activeDot) {
-                activeDot.classList.remove('bg-gray-300');
-                activeDot.classList.add('bg-blue-500');
-            }
-
-        }, 400);
+        }, 300);
     }
-    
 </script>
 @endsection

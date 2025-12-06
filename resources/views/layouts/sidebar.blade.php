@@ -29,12 +29,14 @@
             <span class="font-medium text-lg">Notifications</span>
         </a>
 
+        @if(auth()->user()->profile->role !== 'viewer')
         <a href="{{ route('posts.create') }}" class="flex items-center gap-4 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-full transition group">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
             <span class="font-medium text-lg">Create</span>
         </a>
+        @endif
 
         <a href="{{ route('users.show', auth()->user()->profile->username ?? '') }}" class="flex items-center gap-4 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-full transition group">
             <div class="h-7 w-7 rounded-full overflow-hidden border border-gray-300 group-hover:border-black transition">

@@ -4,8 +4,8 @@
 <div class="py-12 bg-gray-50 min-h-screen">
     <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
         
-        <div class="mb-6">
-            <a href="{{ route('dashboard') }}" class="group inline-flex items-center text-gray-500 hover:text-blue-600 transition">
+        <div class="mb-6 flex items-center">
+            <a href="{{ route('dashboard') }}" class="group flex items-center text-gray-500 hover:text-blue-600 transition">
                 <div class="bg-white p-2 rounded-full shadow-sm group-hover:shadow-md border border-gray-200 mr-3">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
@@ -50,7 +50,7 @@
                     @foreach($post->media as $media)
                         <div class="w-full bg-black flex items-center justify-center">
                             @if($media->file_type === 'video')
-                                <video controls class="w-full max-h-[600px] object-contain">
+                                <video controls class="w-full max-h-[600px] object-contain bg-black">
                                     <source src="{{ asset($media->file_path) }}" type="video/mp4">
                                 </video>
                             @else
@@ -66,15 +66,8 @@
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-4">
-                        
-                        <button 
-                            onclick="toggleLike('post', {{ $post->id }}, this)" 
-                            id="like-btn-post-{{ $post->id }}" 
-                            class="group flex items-center gap-1 focus:outline-none transition transform active:scale-125">
-                            
-                            <svg xmlns="http://www.w3.org/2000/svg" 
-                                 class="h-8 w-8 transition-colors duration-300 {{ $post->likes->contains('user_id', auth()->id()) ? 'text-red-500 fill-current' : 'text-gray-600 group-hover:text-gray-800' }}" 
-                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <button onclick="toggleLike('post', {{ $post->id }}, this)" id="like-btn-post-{{ $post->id }}" class="group flex items-center gap-1 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 transition {{ $post->likes->contains('user_id', auth()->id()) ? 'text-red-500 fill-current' : 'text-gray-600 group-hover:text-gray-800' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                         </button>
@@ -88,7 +81,7 @@
                 </div>
 
                 <div class="font-bold text-gray-900 mb-2 text-lg">
-                    <span id="like-count-post-{{ $post->id }}">{{ $post->likes->count() }}</span> likes
+                    <span id="post-like-count-{{ $post->id }}">{{ $post->likes->count() }}</span> likes
                 </div>
 
                 <h1 class="text-2xl font-bold text-gray-900 mb-3">{{ $post->title }}</h1>
@@ -142,7 +135,7 @@
                 </div>
             @endauth
 
-            <div id="comments-list" class="space-y-6">
+            <div id="comments-list" class="space-y-6 max-h-[600px] overflow-y-auto">
                 @forelse($post->comments as $comment)
                     <div class="flex gap-4">
                         <a href="{{ route('users.show', $comment->user->profile->username) }}" class="flex-shrink-0">
@@ -165,17 +158,9 @@
                                 <button 
                                     onclick="toggleLike('comment', {{ $comment->id }}, this)" 
                                     id="like-btn-comment-{{ $comment->id }}"
-                                    class="group flex items-center gap-1.5 text-xs font-semibold transition hover:text-red-500 focus:outline-none">
-                                    
-                                    <svg xmlns="http://www.w3.org/2000/svg" 
-                                         class="h-4 w-4 transition-colors duration-300 {{ $comment->likes->contains('user_id', auth()->id()) ? 'text-red-500 fill-current' : 'text-gray-400 group-hover:text-red-500' }}" 
-                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                    </svg>
-                                    
-                                    <span id="like-count-comment-{{ $comment->id }}" class="text-gray-500 {{ $comment->likes->count() > 0 ? '' : 'hidden' }}">
-                                        {{ $comment->likes->count() }}
-                                    </span>
+                                    class="text-xs font-semibold flex items-center gap-1 hover:text-red-500 transition {{ $comment->likes->contains('user_id', auth()->id()) ? 'text-red-500' : 'text-gray-500' }}">
+                                    <span class="like-text">{{ $comment->likes->contains('user_id', auth()->id()) ? 'Unlike' : 'Like' }}</span>
+                                    <span id="like-count-comment-{{ $comment->id }}" class="{{ $comment->likes->count() > 0 ? '' : 'hidden' }}">{{ $comment->likes->count() }}</span>
                                 </button>
                             </div>
                         </div>
@@ -191,40 +176,31 @@
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+    // 1. LIKE FUNCTION
     function toggleLike(type, id, btn) {
         btn.disabled = true;
-
         fetch(`/likes/${type}/${id}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": csrfToken
-            }
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken }
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(r => r.json())
+        .then(d => {
             btn.disabled = false;
-            if(data.success) {
+            if(d.success) {
                 let countSpan = document.getElementById(`like-count-${type}-${id}`);
                 if(countSpan) {
-                    countSpan.innerText = data.count;
-                    if(data.count > 0) countSpan.classList.remove('hidden');
+                    countSpan.innerText = d.count;
+                    if(d.count > 0) countSpan.classList.remove('hidden');
                 }
-
                 let svg = btn.querySelector('svg');
-                if(data.liked) {
+                if(d.liked) {
                     svg.classList.remove('text-gray-600', 'text-gray-400');
                     svg.classList.add('text-red-500', 'fill-current');
                 } else {
                     svg.classList.remove('text-red-500', 'fill-current');
-                    svg.classList.add('text-gray-600'); // Default for Post
-                    if(type === 'comment') svg.classList.add('text-gray-400'); // Default for Comment
+                    svg.classList.add(type === 'post' ? 'text-gray-600' : 'text-gray-400');
                 }
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            btn.disabled = false;
         });
     }
 
@@ -235,11 +211,11 @@
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken, "Accept": "application/json" }
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(r => r.json())
+        .then(d => {
             btn.disabled = false;
-            if (data.success) {
-                if (data.following) {
+            if (d.success) {
+                if (d.following) {
                     btn.innerText = "Unfollow";
                     btn.classList.remove('text-blue-600', 'border-blue-200', 'bg-blue-50', 'hover:bg-blue-100');
                     btn.classList.add('text-gray-500', 'border-gray-300', 'hover:border-red-300', 'hover:text-red-500'); 
@@ -249,70 +225,63 @@
                     btn.classList.add('text-blue-600', 'border-blue-200', 'bg-blue-50', 'hover:bg-blue-100');
                 }
             }
-        })
-        .catch(error => { console.error('Error:', error); btn.disabled = false; });
+        });
     }
 
     // 3. COMMENT SUBMIT
     document.getElementById('comment-form').addEventListener('submit', function(e) {
         e.preventDefault();
-
         let content = document.getElementById('comment-content').value;
         let list = document.getElementById('comments-list');
         let errorMsg = document.getElementById('comment-error');
         let noCommentsMsg = document.getElementById('no-comments-msg');
         let countSpan = document.getElementById('comment-count');
 
-        if(content.trim() === '') {
-            errorMsg.innerText = "Comment cannot be empty.";
-            errorMsg.classList.remove('hidden');
-            return;
-        }
+        if(content.trim() === '') return;
 
         fetch("{{ route('comments.store', $post->id) }}", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
             body: JSON.stringify({ content: content })
         })
-        .then(response => response.json())
-        .then(data => {
-            if(data.success) {
+        .then(r => r.json())
+        .then(d => {
+            if(d.success) {
                 document.getElementById('comment-content').value = '';
-                errorMsg.classList.add('hidden');
                 if(noCommentsMsg) noCommentsMsg.remove();
+
+                // Logic to choose Avatar Image or Initials
+                let avatarHtml = '';
+                if(d.user_avatar) {
+                    avatarHtml = `<img src="${d.user_avatar}" class="h-10 w-10 rounded-full object-cover">`;
+                } else {
+                    avatarHtml = `<div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">${d.user_name.charAt(0)}</div>`;
+                }
 
                 let newCommentHtml = `
                     <div class="flex gap-4 animate-pulse bg-blue-50 p-3 rounded-lg transition-all duration-1000">
-                        <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">
-                            ${data.user_name.charAt(0)}
-                        </div>
+                        ${avatarHtml}
                         <div class="flex-1">
                             <div class="flex items-baseline justify-between">
-                                <span class="font-bold text-gray-900 text-sm">${data.user_name}</span>
+                                <span class="font-bold text-gray-900 text-sm">${d.user_name}</span>
                                 <span class="text-xs text-gray-400">Just now</span>
                             </div>
-                            <p class="text-gray-700 text-sm mt-1 leading-relaxed">${data.comment.content}</p>
-                            
+                            <p class="text-gray-700 text-sm mt-1 leading-relaxed">${d.comment.content}</p>
                             <div class="mt-2">
-                                <button onclick="toggleLike('comment', ${data.comment.id}, this)" id="like-btn-comment-${data.comment.id}" class="text-xs font-semibold flex items-center gap-1 hover:text-red-500 transition text-gray-400 group">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                    </svg>
-                                    <span id="like-count-comment-${data.comment.id}" class="hidden">0</span>
+                                <button onclick="toggleLike('comment', ${d.comment.id}, this)" id="like-btn-comment-${d.comment.id}" class="text-xs font-semibold flex items-center gap-1 hover:text-red-500 transition text-gray-400 group">
+                                    <span class="like-text">Like</span>
+                                    <span id="comment-like-count-${d.comment.id}" class="hidden">0</span>
                                 </button>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 
-                list.insertAdjacentHTML('afterbegin', newCommentHtml);
+                // NEWEST FIRST: Use 'afterbegin'
+                list.insertAdjacentHTML('afterbegin', newCommentHtml); 
+                // Removed scroll logic because we are inserting at top
                 countSpan.innerText = parseInt(countSpan.innerText) + 1;
             }
-        })
-        .catch(error => console.error('Error:', error));
+        });
     });
 </script>
 @endsection

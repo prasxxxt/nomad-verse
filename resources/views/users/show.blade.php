@@ -11,6 +11,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 via-transparent to-transparent pointer-events-none transition-opacity duration-500"
              :class="expandedMap ? 'opacity-0' : 'opacity-100'"></div>
 
+        @if($user->profile->role !== 'viewer')
         <div class="absolute top-6 left-6 z-30 hidden md:block">
             <div class="bg-white/90 backdrop-blur-md border border-blue-100 rounded-xl shadow-lg p-3 flex items-center gap-3 transition hover:scale-105">
                 <div>
@@ -27,6 +28,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <div class="absolute top-4 right-4 z-30">
             <button @click="expandedMap = !expandedMap; setTimeout(() => window.dispatchEvent(new Event('resize')), 100)" 
@@ -124,6 +126,7 @@
             </div>
         </div>
 
+        @if($user->profile->role !== 'viewer')
         <h3 class="text-xl font-bold text-gray-800 mb-6 px-2 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
@@ -181,6 +184,7 @@
         <div class="mt-6 pb-12">
             {{ $posts->links() }}
         </div>
+        @endif
 
     </div>
 </div>
@@ -213,7 +217,7 @@
                 series: {
                     regions: [{
                         attribute: 'fill',
-                        scale: { visited: '#ef4444' }, // Red Highlight
+                        scale: { visited: '#20ca47ff' }, // Red Highlight
                         values: visitedCodes.reduce((acc, code) => { 
                             acc[code.toUpperCase()] = 'visited'; 
                             return acc; 

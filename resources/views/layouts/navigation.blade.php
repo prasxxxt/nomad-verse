@@ -18,6 +18,7 @@
             </div>
         </a>
 
+        @if(auth()->user()->profile->role !== 'viewer')
         <a href="{{ route('posts.create') }}" class="flex flex-col items-center justify-center w-full h-full">
             <div class="bg-blue-600 text-white rounded-2xl p-2 shadow-md hover:bg-blue-700 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -25,6 +26,7 @@
                 </svg>
             </div>
         </a>
+        @endif
 
         <a href="{{ route('profile.edit_public') }}" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-blue-600 {{ request()->routeIs('profile.edit_public') ? 'text-blue-600' : '' }}">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

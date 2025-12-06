@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewPostNotification;
+use Illuminate\Support\Facades\Gate;
 
 class PostController extends Controller
 {
@@ -24,10 +25,8 @@ class PostController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', Post::class);
-        
+        Gate::authorize('create', Post::class);
         $countries = \App\Models\Country::orderBy('name')->get();
-        
         return view('posts.create', compact('countries'));
     }
 
@@ -36,24 +35,22 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', Post::class);
+        Gate::authorize('create', Post::class);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'country_id' => 'required|exists:countries,id', // Added Validation
+            'country_id' => 'required|exists:countries,id', 
             'media' => 'nullable|array',
             'media.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,qt|max:10240',
         ]);
 
-        // Create Post
         $post = $request->user()->posts()->create([
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'country_id' => $validated['country_id'], // Now valid
+            'country_id' => $validated['country_id'], 
         ]);
 
-        // Handle Media
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {
                 $path = $file->store('posts', 'public');
@@ -68,7 +65,6 @@ class PostController extends Controller
         }
 
         $followers = $request->user()->followers;
-
         if ($followers->count() > 0) {
             Notification::send($followers, new NewPostNotification($post, $request->user()));
         }
@@ -91,9 +87,12 @@ class PostController extends Controller
     public function edit(string $id)
     {
         $post = Post::findOrFail($id);
-        $this->authorize('update', $post);
+        Gate::authorize('update', $post);
 
-        return view('posts.edit', compact('post'));
+        // Fetch countries for the edit dropdown
+        $countries = \App\Models\Country::orderBy('name')->get();
+
+        return view('posts.edit', compact('post', 'countries'));
     }
 
     /**
@@ -102,11 +101,12 @@ class PostController extends Controller
     public function update(Request $request, string $id)
     {
         $post = Post::findOrFail($id);
-        $this->authorize('update', $post);
+        Gate::authorize('update', $post);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'country_id' => 'required|exists:countries,id',
             'media' => 'nullable|array',
             'media.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,qt|max:10240',
         ]);
@@ -114,6 +114,7 @@ class PostController extends Controller
         $post->update([
             'title' => $validated['title'],
             'description' => $validated['description'],
+            'country_id' => $validated['country_id'],
         ]);
 
         if ($request->hasFile('media')) {
@@ -138,7 +139,7 @@ class PostController extends Controller
     public function destroy(string $id)
     {
         $post = Post::with('media')->findOrFail($id);
-        $this->authorize('delete', $post);
+        Gate::authorize('delete', $post);
 
         foreach ($post->media as $media) {
             $relativePath = str_replace('storage/', '', $media->file_path);
