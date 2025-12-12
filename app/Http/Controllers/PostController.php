@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewPostNotification;
 use Illuminate\Support\Facades\Gate;
+use App\Services\CountryIntelService;
 
 class PostController extends Controller
 {
@@ -75,10 +76,31 @@ class PostController extends Controller
     /**
      * Display the specified resource (The Details Page).
      */
-    public function show(string $id)
+    /**
+     * Display the specified resource (The Details Page).
+     */
+    public function show(string $id, CountryIntelService $intelService)
     {
-        $post = Post::with(['user', 'country', 'comments.user', 'media'])->findOrFail($id);
-        return view('posts.show', compact('post'));
+      
+        $post = Post::with([
+            'user', 
+            'country', 
+            'media',
+            'comments' => function($query) {
+                $query->latest();
+            },
+            'comments.user'
+        ])->findOrFail($id);
+
+        $countryIntel = null;
+        if ($post->country) {
+            $countryIntel = $intelService->getCountryProfile(
+                $post->country->name, 
+                $post->country->iso_code ?? substr($post->country->name, 0, 2) 
+            );
+        }
+        
+        return view('posts.show', compact('post', 'countryIntel'));
     }
 
     /**

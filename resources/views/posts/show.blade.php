@@ -50,7 +50,7 @@
                     @foreach($post->media as $media)
                         <div class="w-full bg-black flex items-center justify-center">
                             @if($media->file_type === 'video')
-                                <video controls class="w-full max-h-[600px] object-contain bg-black">
+                                <video controls class="w-full max-h-[600px] object-contain">
                                     <source src="{{ asset($media->file_path) }}" type="video/mp4">
                                 </video>
                             @else
@@ -71,7 +71,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                         </button>
-                        
                         <button onclick="document.getElementById('comment-content').focus()" class="text-gray-600 hover:text-blue-600 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -87,11 +86,47 @@
                 <h1 class="text-2xl font-bold text-gray-900 mb-3">{{ $post->title }}</h1>
                 <p class="text-gray-700 leading-relaxed whitespace-pre-line text-base mb-6">{{ $post->description }}</p>
 
-                @if($post->country)
-                    <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                        <div class="bg-blue-50 rounded-lg px-3 py-1.5 border border-blue-100 flex items-center gap-2">
-                            <span class="text-2xl">{{ $post->country->flag }}</span>
-                            <div class="text-xs font-bold text-blue-900 uppercase tracking-wide">{{ $post->country->name }}</div>
+                @if($post->country && isset($countryIntel))
+                    <div class="mt-6 border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                        
+                        <div class="bg-gradient-to-r from-violet-50 to-purple-50 p-5 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 bg-purple-200 rounded-full blur-2xl opacity-40"></div>
+                            
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-violet-600 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813a3.75 3.75 0 002.576-2.576l.813-2.846A.75.75 0 019 4.5zM6.97 11.03a.75.75 0 111.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="text-xs font-bold text-violet-700 uppercase tracking-wider">Gemini Insight: {{ $post->country->name }}</span>
+                                </div>
+                                
+                                <p class="text-gray-800 text-sm leading-relaxed font-medium italic">
+                                    "{{ $countryIntel['summary'] }}"
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 border-t border-gray-100 grid grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Capital</p>
+                                <p class="text-sm font-bold text-gray-900">{{ $countryIntel['capital'] }}</p>
+                            </div>
+                            
+                            <div class="text-center border-l border-gray-100">
+                                <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Population</p>
+                                <p class="text-sm font-bold text-gray-900">{{ $countryIntel['population'] }}</p>
+                            </div>
+
+                            <div class="text-center border-l border-gray-100">
+                                <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Currency</p>
+                                <p class="text-sm font-bold text-gray-900">
+                                    @if(!empty($countryIntel['currency']))
+                                        {{ $countryIntel['currency']['code'] }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </p>
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -158,9 +193,15 @@
                                 <button 
                                     onclick="toggleLike('comment', {{ $comment->id }}, this)" 
                                     id="like-btn-comment-{{ $comment->id }}"
-                                    class="text-xs font-semibold flex items-center gap-1 hover:text-red-500 transition {{ $comment->likes->contains('user_id', auth()->id()) ? 'text-red-500' : 'text-gray-500' }}">
-                                    <span class="like-text">{{ $comment->likes->contains('user_id', auth()->id()) ? 'Unlike' : 'Like' }}</span>
-                                    <span id="like-count-comment-{{ $comment->id }}" class="{{ $comment->likes->count() > 0 ? '' : 'hidden' }}">{{ $comment->likes->count() }}</span>
+                                    class="group flex items-center gap-1.5 text-xs font-semibold transition hover:text-red-500 focus:outline-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" 
+                                         class="h-4 w-4 transition-colors duration-300 {{ $comment->likes->contains('user_id', auth()->id()) ? 'text-red-500 fill-current' : 'text-gray-400 group-hover:text-red-500' }}" 
+                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    <span id="like-count-comment-{{ $comment->id }}" class="text-gray-500 {{ $comment->likes->count() > 0 ? '' : 'hidden' }}">
+                                        {{ $comment->likes->count() }}
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -250,7 +291,6 @@
                 document.getElementById('comment-content').value = '';
                 if(noCommentsMsg) noCommentsMsg.remove();
 
-                // Logic to choose Avatar Image or Initials
                 let avatarHtml = '';
                 if(d.user_avatar) {
                     avatarHtml = `<img src="${d.user_avatar}" class="h-10 w-10 rounded-full object-cover">`;
@@ -269,16 +309,14 @@
                             <p class="text-gray-700 text-sm mt-1 leading-relaxed">${d.comment.content}</p>
                             <div class="mt-2">
                                 <button onclick="toggleLike('comment', ${d.comment.id}, this)" id="like-btn-comment-${d.comment.id}" class="text-xs font-semibold flex items-center gap-1 hover:text-red-500 transition text-gray-400 group">
-                                    <span class="like-text">Like</span>
-                                    <span id="comment-like-count-${d.comment.id}" class="hidden">0</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                    <span id="like-count-comment-${d.comment.id}" class="hidden">0</span>
                                 </button>
                             </div>
                         </div>
                     </div>`;
                 
-                // NEWEST FIRST: Use 'afterbegin'
-                list.insertAdjacentHTML('afterbegin', newCommentHtml); 
-                // Removed scroll logic because we are inserting at top
+                list.insertAdjacentHTML('afterbegin', newCommentHtml);
                 countSpan.innerText = parseInt(countSpan.innerText) + 1;
             }
         });
