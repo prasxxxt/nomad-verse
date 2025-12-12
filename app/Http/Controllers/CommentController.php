@@ -11,7 +11,8 @@ class CommentController extends Controller
 {
     public function store(Request $request, $postId)
     {
-=        $request->validate([
+        // FIX: Removed the stray '=' sign that was here
+        $request->validate([
             'content' => 'required|string|max:500',
         ]);
 
@@ -22,7 +23,8 @@ class CommentController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        if ($post->user_id !== auth()->id()) {
+        // FIX: Added check if ($post->user) exists to prevent crash on orphaned posts
+        if ($post->user_id !== auth()->id() && $post->user) {
             try {
                 $post->user->notify(new NewCommentNotification($comment, auth()->user()));
             } catch (\Exception $e) {
@@ -35,7 +37,8 @@ class CommentController extends Controller
             $avatarUrl = asset(auth()->user()->profile->profile_photo);
         }
 
-=        return response()->json([
+        // FIX: Removed the stray '=' sign that was here
+        return response()->json([
             'success' => true,
             'comment' => $comment,
             'user_name' => auth()->user()->name,

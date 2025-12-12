@@ -78,7 +78,6 @@
                                                      style="width: 100%; height: 100%; object-fit: cover;">
                                             @endif
                                         </a>
-
                                     </div>
                                 @endforeach
                             </div>
@@ -127,14 +126,15 @@
                         </div>
 
                         <div class="mb-2 text-sm leading-snug">
+                            <a href="{{ route('users.show', $post->user->profile->username) }}" class="font-bold text-gray-900 mr-1 hover:underline">
+                                {{ $post->user->name }}
+                            </a>
                             <span class="text-gray-800">{{ Str::limit($post->description, 150) }}</span>
                         </div>
 
-                        @if($post->comments->count() > 0)
-                            <a href="{{ route('posts.show', $post->id) }}" class="text-gray-500 text-sm mb-2 block">
-                                View all {{ $post->comments->count() }} comments
-                            </a>
-                        @endif
+                        <a href="{{ route('posts.show', $post->id) }}" class="text-gray-500 text-sm mb-2 block" id="view-comments-link-{{ $post->id }}">
+                            View all <span id="post-comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span> comments
+                        </a>
                         
                         <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-3">
                             {{ $post->created_at->diffForHumans() }}
@@ -143,7 +143,7 @@
                         <div id="comment-box-{{ $post->id }}" class="hidden pt-2 border-t border-gray-100">
                             <form onsubmit="submitComment(event, {{ $post->id }})" class="flex gap-2">
                                 <input type="text" id="comment-input-{{ $post->id }}" 
-                                    class="flex-1 bg-transparent text-sm border-none focus:ring-0 px-0 placeholder-gray-400" 
+                                    class="flex-1 bg-transparent text-sm border-none focus:ring-0 px-0 placeholder-gray-400 h-8" 
                                     placeholder="Add a comment..." autocomplete="off">
                                 <button type="submit" class="text-blue-500 font-semibold text-sm hover:text-blue-700 disabled:opacity-50">Post</button>
                             </form>
@@ -165,6 +165,9 @@
 </style>
 
 <script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // 1. CAROUSEL
     function scrollCarousel(postId, direction) {
         const container = document.getElementById(`carousel-${postId}`);
         const counter = document.getElementById(`counter-${postId}`);
@@ -180,6 +183,100 @@
                 counter.innerText = validIndex;
             }
         }, 300);
+    }
+
+    // 2. TOGGLE COMMENT BOX (Visual)
+    function toggleCommentBox(postId) {
+        const box = document.getElementById(`comment-box-${postId}`);
+        const input = document.getElementById(`comment-input-${postId}`);
+        box.classList.toggle('hidden');
+        if (!box.classList.contains('hidden')) {
+            input.focus();
+        }
+    }
+
+    // 3. TOGGLE LIKE (AJAX)
+    function toggleLike(type, id, btn) {
+        btn.disabled = true;
+        fetch(`/likes/${type}/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken }
+        })
+        .then(r => r.json())
+        .then(d => {
+            btn.disabled = false;
+            if(d.success) {
+                let countSpan = document.getElementById(`post-like-count-${id}`);
+                if(countSpan) countSpan.innerText = d.count;
+                
+                let svg = btn.querySelector('svg');
+                if(d.liked) {
+                    svg.classList.remove('text-gray-900', 'hover:text-gray-600');
+                    svg.classList.add('text-red-500', 'fill-current');
+                } else {
+                    svg.classList.remove('text-red-500', 'fill-current');
+                    svg.classList.add('text-gray-900');
+                }
+            }
+        });
+    }
+
+    // 4. TOGGLE FOLLOW (AJAX)
+    function toggleFollow(userId, btn) {
+        btn.disabled = true;
+        fetch(`/users/${userId}/follow`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken, "Accept": "application/json" }
+        })
+        .then(r => r.json())
+        .then(d => {
+            btn.disabled = false;
+            if (d.success) {
+                if (d.following) {
+                    btn.innerText = "Unfollow";
+                    btn.classList.remove('bg-blue-50', 'text-blue-600');
+                    btn.classList.add('bg-gray-100', 'text-gray-600');
+                } else {
+                    btn.innerText = "Follow";
+                    btn.classList.remove('bg-gray-100', 'text-gray-600');
+                    btn.classList.add('bg-blue-50', 'text-blue-600');
+                }
+            }
+        });
+    }
+
+    // 5. SUBMIT COMMENT (AJAX) - This was missing!
+    function submitComment(event, postId) {
+        event.preventDefault();
+        const input = document.getElementById(`comment-input-${postId}`);
+        const content = input.value;
+        const countSpan = document.getElementById(`post-comment-count-${postId}`);
+
+        if(content.trim() === '') return;
+
+        fetch(`/posts/${postId}/comments`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                input.value = '';
+                // Update count instantly
+                if(countSpan) {
+                    countSpan.innerText = parseInt(countSpan.innerText) + 1;
+                }
+                // Visual Feedback
+                let originalPlaceholder = input.placeholder;
+                input.placeholder = "Comment posted!";
+                setTimeout(() => input.placeholder = originalPlaceholder, 2000);
+            }
+        })
+        .catch(error => console.error('Error:', error));
     }
 </script>
 @endsection
